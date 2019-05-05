@@ -1,3 +1,4 @@
+import datetime
 import os
 import random
 
@@ -66,14 +67,18 @@ class CRFModel:
 
         # TODO: train using data splits
         if self._training_data_split is not None:
+            begin = datetime.datetime.now()
             for fold in self._training_data_split:
                 train_sequences_id = self._training_data_split[fold]["train"]
                 self._trained_model_dir = self._training_workflow.train_model(
                     train_sequences_id, self._model_object, optimization_option
                 )
+            end = datetime.datetime.now()
+            elapsed_time = end - begin
 
             print("-" * 100)
             print("Model trained successfully.")
+            print(f"Elapsed time: {divmod(elapsed_time.total_seconds(), 60)}")
 
     def predict(self, sequences, output_file):
 
