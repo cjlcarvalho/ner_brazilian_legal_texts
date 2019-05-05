@@ -125,7 +125,9 @@ class CRFModel:
         ).generate_sequences("train")
 
         self._training_data_split = self._training_workflow.seq_parsing_workflow(
-            self._data_split_option, seqs=random.sample(training_sequence, 1000), full_parsing=True
+            self._data_split_option,
+            seqs=random.sample(training_sequence, 1000),
+            full_parsing=True,
         )
 
         self._model_object = self._training_workflow.build_crf_model(

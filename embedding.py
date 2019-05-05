@@ -21,7 +21,13 @@ class EmbeddingModel:
         x_train, y_train = LeNerCorpus.get_sequence_tagging_data()
         x_validate, y_validate = LeNerCorpus.get_sequence_tagging_data(data_type="dev")
 
-        self._model.fit(x_train, y_train, x_validate=x_validate, y_validate=y_validate, epochs=epochs)
+        self._model.fit(
+            x_train,
+            y_train,
+            x_validate=x_validate,
+            y_validate=y_validate,
+            epochs=epochs,
+        )
 
     def evaluate(self, data_type: str = "test"):
 
