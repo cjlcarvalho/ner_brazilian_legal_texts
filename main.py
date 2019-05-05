@@ -31,6 +31,8 @@ if __name__ == "__main__":
 
     output_path = os.path.join(os.path.dirname(__file__), "output")
 
+    model = None
+
     if args.method == "CRF":
 
         if args.model == "FirstOrderCRF":
@@ -63,21 +65,12 @@ if __name__ == "__main__":
                 "Model unknown for CRF. Please use FirstOrderCRF, HOCRFAD or HOSemiCRFAD"
             )
 
-        model.train(
-            optimization_method="SGA-ADADELTA",
-            regularization_type="l2",
-            regularization_value=0,
-            epochs=60,  # TODO: Change to 60
-        )
-        pyseqlab_dataset_dir = os.path.join(LENER_DATASET_DIR, "pyseqlab")
-        model.evaluate(
-            os.path.join(pyseqlab_dataset_dir, "test", "ACORDAOTCU11602016.conll")
-        )
-
     elif args.method == "EMBEDDING":
 
         if args.model == "BLSTMCRF":
 
             model = EmbeddingModel(BLSTMCRFModel)
-            model.train(epochs=60)
-            model.evaluate("test")
+
+    if model is not None:
+        model.train(epochs=60)
+        model.evaluate("test")

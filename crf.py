@@ -53,18 +53,12 @@ class CRFModel:
 
     def train(self, **kwargs):
 
-        optimization_method = kwargs.get("optimization_method")
-        if optimization_method not in ("SGA-ADADELTA", "SGA", "SVRG"):
-            raise Exception("Unknown optimization method.")
-
-        regularization_type = kwargs.get("regularization_type")
-        regularization_value = kwargs.get("regularization_value")
         epochs = kwargs.get("epochs")
 
         optimization_option = dict(
-            method=optimization_method,
-            regularization_type=regularization_type,
-            regularization_value=regularization_value,
+            method="SGA-ADADELTA",
+            regularization_type="l2",
+            regularization_value=0,
             num_epochs=epochs,
         )
 
@@ -93,17 +87,17 @@ class CRFModel:
             sep="\t",
         )
 
-    def evaluate(self, sequence_file):
+    def evaluate(self, sequence_type):
 
         sequences = PySeqLabSequenceBuilder(
             self._pyseqlab_dataset_dir
-        ).build_sequences_from_file(sequence_file)
+        ).generate_sequences(sequence_type)
 
         y_true = [sequence.flat_y for sequence in sequences]
 
         prediction = self.predict(
             sequences,
-            os.path.join(os.path.dirname(sequence_file), "output_evaluation.txt"),
+            os.path.join(self._pyseqlab_dataset_dir, "output_evaluation.txt"),
         )
 
         y_pred = [value["Y_pred"] for key, value in prediction.items()]
@@ -125,9 +119,7 @@ class CRFModel:
         ).generate_sequences("train")
 
         self._training_data_split = self._training_workflow.seq_parsing_workflow(
-            self._data_split_option,
-            seqs=random.sample(training_sequence, 1000),
-            full_parsing=True,
+            self._data_split_option, seqs=random.sample(training_sequence, 1000), full_parsing=True
         )
 
         self._model_object = self._training_workflow.build_crf_model(
