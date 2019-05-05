@@ -1,7 +1,6 @@
-# ner_brazilian_legal_texts
-Named Entity Recognition in Brazilian Legal Texts using Conditional Random Fields and Word Embeddings
+# Named Entity Recognition in Brazilian Legal Texts using Conditional Random Fields and Word Embeddings
 
-# Running
+## Running
 
 * Download LeNER-Br dataset using the script available in lener directory.
 
