@@ -9,4 +9,4 @@ Named Entity Recognition in Brazilian Legal Texts using Conditional Random Field
   
 * Run main.py, specifying the NER method and model:
 
-  * ```python main.py --method CRF --model [FirstOrderCRF|HOCRFAD|HOSemiCRFAD]
+  * ```python main.py --method CRF --model [FirstOrderCRF|HOCRFAD|HOSemiCRFAD]```
