@@ -1,9 +1,11 @@
 import os
+import random
+
+from seqeval.metrics import accuracy_score, classification_report
 
 from typing import Optional, Type, Union
 
 from pyseqlab.attributes_extraction import GenericAttributeExtractor
-from pyseqlab.crf_learning import SeqDecodingEvaluator
 from pyseqlab.features_extraction import FeatureExtractor, FOFeatureExtractor
 from pyseqlab.linear_chain_crf import LCRF, LCRFModelRepresentation
 from pyseqlab.utilities import TemplateGenerator
@@ -91,87 +93,25 @@ class CRFModel:
             sep="\t",
         )
 
-    def evaluate(self, sequence_file, per_tag=True):
+    def evaluate(self, sequence_file):
 
-        _metrics = ("f1", "precision", "recall", "accuracy")
+        sequences = PySeqLabSequenceBuilder(
+            self._pyseqlab_dataset_dir
+        ).build_sequences_from_file(sequence_file)
 
-        overall_metrics_performance = dict(
-            f1=None, precision=None, recall=None, accuracy=None
+        y_true = [sequence.flat_y for sequence in sequences]
+
+        prediction = self.predict(
+            sequences,
+            os.path.join(os.path.dirname(sequence_file), "output_evaluation.txt"),
         )
 
-        for _metric in _metrics:
+        y_pred = [value["Y_pred"] for key, value in prediction.items()]
 
-            options = {
-                "seq_file": sequence_file,
-                "data_parser_options": self._data_parser_options,
-                "num_seqs": 25,
-                "model_eval": True,
-                "metric": _metric,
-            }
-
-            _performance = self._training_workflow.use_model(
-                self._trained_model_dir, options
-            )
-            overall_metrics_performance[_metric] = _performance[_metric]
-
-        if per_tag:
-
-            sequences = PySeqLabSequenceBuilder(
-                self._pyseqlab_dataset_dir
-            ).build_sequences_from_file(sequence_file)
-
-            evaluator = SeqDecodingEvaluator(self._model_object.model)
-
-            decoded_sequences = self.predict(
-                sequences,
-                os.path.join(os.path.dirname(sequence_file), "output_evaluation.txt"),
-            )
-
-            y_seqs_dict = GenericTrainingWorkflow.map_pred_to_ref_seqs(
-                decoded_sequences
-            )
-
-            taglevel_performance = evaluator.compute_states_confmatrix(y_seqs_dict)
-
-            tags = [
-                tag
-                for tag in (
-                    "B-ORGANIZACAO",
-                    "I-ORGANIZACAO",
-                    "B-PESSOA",
-                    "I-PESSOA",
-                    "B-JURISPRUDENCIA",
-                    "I-JURISPRUDENCIA",
-                    "B-TEMPO",
-                    "I-TEMPO",
-                    "B-LEGISLACAO",
-                    "I-LEGISLACAO",
-                    "B-LOCAL",
-                    "I-LOCAL",
-                )
-                if tag in self._model_object.model.Y_codebook.keys()
-            ]
-
-            per_tag_performances = dict()
-            for tag in tags:
-                per_tag_performances[tag] = dict()
-
-            for _metric in _metrics:
-                for tag in tags:
-                    excluded_states = [
-                        t
-                        for t in self._model_object.model.Y_codebook.keys()
-                        if t != tag
-                    ]
-
-                    perf = evaluator.get_performance_metric(
-                        taglevel_performance, _metric, exclude_states=excluded_states
-                    )
-                    per_tag_performances[tag][_metric] = perf
-
-            print(per_tag_performances)
-
-        print(overall_metrics_performance)
+        print(y_true)
+        print(y_pred)
+        print(accuracy_score(y_true, y_pred))
+        print(classification_report(y_true, y_pred))
 
     def _build_model(self):
 
@@ -185,7 +125,7 @@ class CRFModel:
         ).generate_sequences("train")
 
         self._training_data_split = self._training_workflow.seq_parsing_workflow(
-            self._data_split_option, seqs=training_sequence[:10], full_parsing=True
+            self._data_split_option, seqs=random.sample(training_sequence, 1000), full_parsing=True
         )
 
         self._model_object = self._training_workflow.build_crf_model(

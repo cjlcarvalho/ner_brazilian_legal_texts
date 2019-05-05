@@ -67,7 +67,7 @@ if __name__ == "__main__":
             optimization_method="SGA-ADADELTA",
             regularization_type="l2",
             regularization_value=0,
-            epochs=10,
+            epochs=60,  # TODO: Change to 60
         )
         pyseqlab_dataset_dir = os.path.join(LENER_DATASET_DIR, "pyseqlab")
         model.evaluate(
@@ -79,5 +79,5 @@ if __name__ == "__main__":
         if args.model == "BLSTMCRF":
 
             model = EmbeddingModel(BLSTMCRFModel)
-            model.train(epochs=50)
+            model.train(epochs=60)
             model.evaluate("test")

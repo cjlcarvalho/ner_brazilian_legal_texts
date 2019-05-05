@@ -1,6 +1,6 @@
 from typing import Type
 
-from kashgari.tasks.seq_labeling import BLSTMCRFModel, SequenceLabelingModel
+from kashgari.tasks.seq_labeling import SequenceLabelingModel
 
 from utils import adapt_lener_to_kashgari, LeNerCorpus
 
@@ -19,8 +19,9 @@ class EmbeddingModel:
         epochs = kwargs.get("epochs")
 
         x_train, y_train = LeNerCorpus.get_sequence_tagging_data()
+        x_validate, y_validate = LeNerCorpus.get_sequence_tagging_data(data_type="dev")
 
-        self._model.fit(x_train, y_train, epochs=epochs)
+        self._model.fit(x_train, y_train, x_validate=x_validate, y_validate=y_validate, epochs=epochs)
 
     def evaluate(self, data_type: str = "test"):
 
