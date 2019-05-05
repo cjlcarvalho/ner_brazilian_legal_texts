@@ -1,10 +1,12 @@
 import os
 import shutil
 
-from typing import Union
+from typing import Union, List, Tuple
 
 from pyseqlab.utilities import DataFileParser
 
+from kashgari.corpus import Corpus, _load_data_and_labels
+from kashgari.utils import helper
 
 LENER_DATASET_DIR: Union[bytes, str] = os.path.join(os.path.dirname(__file__), "lener")
 
@@ -14,17 +16,17 @@ def join_path(*args):
     return os.path.join(*args)
 
 
-def adapt_lener_to_flair(percentage: float = 1):
+def adapt_lener_to_kashgari(percentage: float = 1):
 
     assert 0 <= percentage <= 1
 
-    flair_data_dir = join_path(LENER_DATASET_DIR, "flair")
-    if os.path.isdir(flair_data_dir):
-        shutil.rmtree(flair_data_dir)
-    os.mkdir(flair_data_dir)
+    kashgari_data_dir = join_path(LENER_DATASET_DIR, "kashgari")
+    if os.path.isdir(kashgari_data_dir):
+        shutil.rmtree(kashgari_data_dir)
+    os.mkdir(kashgari_data_dir)
 
     def adapt_files(dir_name):
-        with open(join_path(flair_data_dir, f"{dir_name}.txt"), "w") as new_file:
+        with open(join_path(kashgari_data_dir, f"{dir_name}.txt"), "w") as new_file:
             original_dir = join_path(LENER_DATASET_DIR, dir_name)
             original_files = os.listdir(original_dir)
             percentage_limit = max(int(len(original_files) * percentage), 1)
@@ -33,7 +35,11 @@ def adapt_lener_to_flair(percentage: float = 1):
                 with open(
                     join_path(original_dir, original_file)
                 ) as original_file_content:
-                    content = "".join(original_file_content.readlines())
+                    lines = [
+                        line.replace(" ", "\t")
+                        for line in original_file_content.readlines()
+                    ]
+                    content = "".join(lines)
                     new_file.write(content)
 
     adapt_files("train")
@@ -110,3 +116,36 @@ class PySeqLabSequenceBuilder:
                 file_path, header="main", y_ref=True, column_sep=" "
             )
         ]
+
+
+class LeNerCorpus(Corpus):
+
+    __corpus_name__ = "lener/kashgari"
+    __zip_file__name = "lener/kashgari/lener.tar.gz"
+
+    @classmethod
+    def get_sequence_tagging_data(
+        cls, data_type: str = "train", shuffle: bool = True, max_count: int = 0
+    ) -> Tuple[List[List[str]], List[List[str]]]:
+
+        if data_type not in ["train", "dev", "test"]:
+            raise ValueError(
+                "data_type error, please use one of the {}".format(
+                    ["train", "dev", "test"]
+                )
+            )
+
+        folder_path = helper.cached_path(cls.__corpus_name__, cls.__zip_file__name)
+
+        file_path = os.path.join(folder_path, f"{data_type}.txt")
+
+        x_list, y_list = _load_data_and_labels(file_path)
+
+        if shuffle:
+            x_list, y_list = helper.unison_shuffled_copies(x_list, y_list)
+
+        if max_count > 0:
+            x_list = x_list[:max_count]
+            y_list = y_list[:max_count]
+
+        return x_list, y_list

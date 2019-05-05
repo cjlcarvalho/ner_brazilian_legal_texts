@@ -6,8 +6,9 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-flair = "*"
+tensorflow = "*"
 pyseqlab = {ref = "master", git = "https://github.com/bratao/PySeqLab.git"}
+kashgari = {ref = "master", git = "https://github.com/BrikerMan/Kashgari"}
 
 [requires]
 python_version = "3.7"
