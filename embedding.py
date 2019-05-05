@@ -13,7 +13,7 @@ adapt_lener_to_flair(percentage=0.02)
 
 
 class EmbeddingModel:
-    def __init__(self, working_directory: Union[bytes, str]):
+    def __init__(self, working_directory: Union[bytes, str], use_gpu=False):
 
         self._working_directory = working_directory
         self._columns = {0: "w", 1: "chunk"}
@@ -21,7 +21,7 @@ class EmbeddingModel:
 
         self._model = None
         self._corpus = None
-        self._build_model()
+        self._build_model(use_gpu)
 
     def train(self):
 
@@ -36,7 +36,7 @@ class EmbeddingModel:
             max_epochs=150,
         )
 
-    def _build_model(self):
+    def _build_model(self, use_gpu=False):
 
         self._corpus = NLPTaskDataFetcher.load_column_corpus(
             self._flair_data_folder,
@@ -65,8 +65,13 @@ class EmbeddingModel:
             use_rnn=True,
         )
 
+        if use_gpu:
+            self._model.cuda(0)
+
 
 if __name__ == "__main__":
 
-    model = EmbeddingModel(os.path.join(os.path.dirname(__file__), "output"))
+    model = EmbeddingModel(
+        os.path.join(os.path.dirname(__file__), "output"), use_gpu=True
+    )
     model.train()
